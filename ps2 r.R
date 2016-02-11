@@ -5,6 +5,7 @@ setwd("/Users/iramalis/Desktop/4625/wd")
 ### EXAMPLE vec.random - VECTOR OF 100 RANDOM VALUES FROM 1 TO 1000
 
 vec.random<-runif(100,1,1000)
+not.random<-rep(seq(3,5),300)
 
 ### function: get.distrib
 ### 
@@ -17,12 +18,28 @@ get.distrib=function(vec.results){
   vec.results<-as.character(vec.results)
   results.first<-substr(vec.results,1,1) # extracting first digit of each element of vec.results
   table.first<-table(results.first)
-  vec.distrib<-as.numeric(as.vector(table.first)) # vector of total occurrences of each digit
+  nums<-as.character(c(1:9))
+  # creating vector of total occurrences of each digit, ensuring that values are assigned to correct position
+  #   in the vector (in case some digits do not appear as the first significant digit in the original vec.results)
+  vec.distrib<-rep(0,9)
+  for (i in nums){
+    digit<-as.numeric(i)
+    if(length(table.first[names(table.first)==i])!=0){
+      vec.distrib[digit]<-table.first[names(table.first)==i]
+    }
+  }
+  vec.distrib<-as.vector(vec.distrib) # getting rid of names from table
+  return(vec.distrib)
 }
+
+### PROBLEM: if the original vector does not have all digits (1:9) appearing as the first significant digit
+###     of some value, then the table created in the above function will not include all 9 digits, so the 
+###     outputted vector will not be of length 9. I can't figure out how to fix this.
 
 ### TEST get.distrib on vec.random
 
 test.distrib<-get.distrib(vec.random)
+fraud.distrib<-get.distrib(not.random)
 
 ### function: get.freq
 ### 
@@ -38,6 +55,7 @@ get.freq=function(vec.distrib){
 ### TEST get.freq on test.distrib
 
 test.freq<-get.freq(test.distrib)
+fraud.freq<-get.freq(fraud.distrib)
 
 ### function: find.m
 ### 
@@ -45,7 +63,6 @@ test.freq<-get.freq(test.distrib)
 ### outptus: single value, Leemis's m statistic, for the frequencies provided
 
 find.m=function(vec.freq){
-  final<-rep(NA,1)
   i<-(1:length(vec.freq))  
   final<-vec.freq-log10(1+1/i)
   return (max(final))
@@ -54,6 +71,7 @@ find.m=function(vec.freq){
 ### TEST find.m on test.freq
 
 test.m<-find.m(test.freq)
+fraud.m<-find.m(fraud.freq)
 
 ### function: find.d
 ###
@@ -130,10 +148,23 @@ print.benfords=function(vec.results){
   m.star<-paste(m, stars[m.sig], sep="")
   d.star<-paste(d, stars[d.sig], sep="")
   
-  matrix.benfords<-array()
-  matrix.benfords[1,]<-c("m statistic","d statistic")
-  table.benfords[2,]<-c(m.star, d.star)
+  # matrix of statistics, with names, values, and asterisks
+  matrix.benfords<-array(dim=c(2,2))
+  matrix.benfords[1,]<-c("Leemis's m","Cho-Gains' d")
+  matrix.benfords[2,]<-c(m.star, d.star)
+  
+  # list combining matrix above with explanation of stars
+  explanation<-cbind(c("* = significant at α=.10", "** = significant at α=.05", "*** = significant at α=.01"))
+  list.critical<-list()
+  list.critical[[1]]<-matrix.benfords
+  list.critical[[2]]<-explanation
+  
+  return(list.critical)
 }
+
+print.benfords(vec.random)
+
+?capture.output
 
 stars<-c("*","**","***")
 paste("hello",stars[0],sep="")
