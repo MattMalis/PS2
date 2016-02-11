@@ -64,8 +64,8 @@ fraud.freq<-get.freq(fraud.distrib)
 
 find.m=function(vec.freq){
   i<-(1:length(vec.freq))  
-  final<-vec.freq-log10(1+1/i)
-  return (max(final))
+  values<-vec.freq-log10(1+1/i)
+  return (max(values))
 }
 
 ### TEST find.m on test.freq
@@ -79,15 +79,15 @@ fraud.m<-find.m(fraud.freq)
 ### outputs: single value, Cho-Gain's d statistic, for the frequencies provided
 
 find.d=function(vec.freq){
-  final<-NA
   i<-(1:length(vec.freq))
-  final<-vec.freq-log10(1+1/i)
-  return(sqrt(sum(final^2)))
+  values<-vec.freq-log10(1+1/i)
+  return(sqrt(sum(values^2)))
 }
 
 ### TEST find.d on test.freq
 
 test.d<-find.d(test.freq)
+fraud.d<-find.d(fraud.freq)
 
 ### QUESTION 1: CALCULATING VIOLATIONS
 ###
@@ -162,39 +162,30 @@ print.benfords=function(vec.results){
   return(list.critical)
 }
 
+### TEST
+
 print.benfords(vec.random)
-
-?capture.output
-
-stars<-c("*","**","***")
-paste("hello",stars[0],sep="")
-
-table.benfords<-list("Statistics"=names, "Values"=values, explanation)
-
-names
-values
-explanation
-
-this<-array(dim=c(3,3))
-this[1,1:2]<-c("m statistic","d statistic")
-
-this[2,1:2]<-c(.89,1.30)
-
-explanation<-bind(c("* = significant at α=.10", "** = significant at α=.10", "*** = significant at α=.10"))
-?table
-table1<-rbind(names, values)
-
-                   table.benfords[2,(1:2)]<-c(paste(.9, rep("*", 0)), paste(.11, rep("*", 2)))
-
-paste(.11, rep("*",2))
-paste("*",,sep="")
-
-?rep
-?structure
+print.benfords(not.random)
 
 
 ### function: benfords.csv
 ###
-###
-###
-###
+### inputs: vec.results (same as above); directory, destination to write the csv file to (default to my working directory)
+### outputs: writes a csv of the output of the print.benfords function
+
+
+benfords.csv=function(vec.results, directory=("/Users/iramalis/Desktop/4625/wd")){
+  list.critical<-print.benfords(vec.results)
+  clean.array<-array(dim=c(6,2)) # empty array
+  clean.array[1:2,1:2]<-list.critical[[1]] # adding statistic names and values
+  clean.array[4:6,1]<-list.critical[[2]] # adding explanation of asterisks
+  #replacing NAs with "", leaving space for legibility
+  clean.array[4:6,2]<-""
+  clean.array[3,1:2]<-""
+  setwd(directory)
+  write.csv(clean.array,file="benfords.csv")
+}
+
+### TEST
+benfords.csv(vec.random)
+benfords.csv(not.random)
