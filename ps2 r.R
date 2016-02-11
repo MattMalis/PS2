@@ -2,8 +2,42 @@
 getwd()
 setwd("/Users/iramalis/Desktop/4625/wd")
 
-getwd()
-setwd("/Users/iramalis/Desktop/4625/wd/")
+### EXAMPLE vec.random - VECTOR OF 100 RANDOM VALUES FROM 1 TO 1000
+
+vec.random<-runif(100,1,1000)
+
+### function: get.distrib
+### 
+### inputs: vec.results, a vector of vote totals
+### outputs: vec.distrib, a vector of the distribution of occurrences of each digit (1:9)
+###      as the first significant digit of the values in the vote totals vector
+
+
+get.distrib=function(vec.results){
+  vec.results<-as.character(vec.results)
+  results.first<-substr(vec.results,1,1) # extracting first digit of each element of vec.results
+  table.first<-table(results.first)
+  vec.distrib<-as.numeric(as.vector(table.first)) # vector of total occurrences of each digit
+}
+
+### TEST get.distrib on vec.random
+
+test.distrib<-get.distrib(vec.random)
+
+### function: get.freq
+### 
+### inputs: vec.distrib, a vector of the distribution of occurrences of each digit (1:9)
+###       as the first significant digit of the values of vote totals
+### outputs: vec.freq, a vector of the proportional frequencies with which each digit
+###       appears in the first significant digit of the values of vote totals
+
+get.freq=function(vec.distrib){
+  vec.freq<-vec.distrib/sum(vec.distrib)
+}
+
+### TEST get.freq on test.distrib
+
+test.freq<-get.freq(test.distrib)
 
 ### function: find.m
 ### 
@@ -17,43 +51,25 @@ find.m=function(vec.freq){
   return (max(final))
 }
 
+### TEST find.m on test.freq
+
+test.m<-find.m(test.freq)
+
 ### function: find.d
 ###
 ### inputs: vec.freq, vector of proportional frequencies for each digit, 1:9
 ### outputs: single value, Cho-Gain's d statistic, for the frequencies provided
 
-find.d=function(veq.freq){
+find.d=function(vec.freq){
   final<-NA
   i<-(1:length(vec.freq))
   final<-vec.freq-log10(1+1/i)
   return(sqrt(sum(final^2)))
 }
 
+### TEST find.d on test.freq
 
-### function: get.distrib
-### 
-### inputs: vec.results, a vector of vote totals
-### outputs: vec.distrib, a vector of the distribution of occurrences of each digit (1:9)
-###      as the first significant digit of the values in the vote totals vector
-
-
-get.distrib=function(vec.results){
-  vec.results<-as.character(vec.results)
-  results.first<-substr(vec.results) # extracting first digit of each element of vec.results
-  table.first<-table(results.first)
-  vec.distrib<-as.numeric(as.vector(table.first)) # vector of total occurrences of each digit
-}
-
-### function: get.freq
-### 
-### inputs: vec.distrib, a vector of the distribution of occurrences of each digit (1:9)
-###       as the first significant digit of the values of vote totals
-### outputs: vec.freq, a vector of the proportional frequencies with which each digit
-###       appears in the first significant digit of the values of vote totals
-
-get.freq=function(vec.distrib){
-  vec.freq<-vec.distrib/sum(vec.distrib)
-}
+test.d<-find.d(test.freq)
 
 ### QUESTION 1: CALCULATING VIOLATIONS
 ###
@@ -68,7 +84,7 @@ get.freq=function(vec.distrib){
 benford.results=function(vec.results,want.m=TRUE,want.d=TRUE){
   vec.distrib<-get.distrib(vec.results) # find distribution of digits
   vec.freq<-get.freq(vec.distrib) # find proportional frequency of digits
-  list.benford<-list(null) 
+  list.benford<-list(NULL) 
   if (want.m){
     m<-find.m(vec.freq) # calculate m-statistic, if requested
     list.benford[[1]]<-m # add m to list, as first element
@@ -78,43 +94,76 @@ benford.results=function(vec.results,want.m=TRUE,want.d=TRUE){
     list.benford[[2]]<-d # add d to list, as second element
   }
   list.benford[[3]]<-vec.distrib # add vector of digit distributions to list, as second element
+  return(list.benford)
 }
 
-### function: benford.critical
-###
-###
-###
-###
+### TEST benford.results on vec.random
 
-benford.critical=
-
-  m.values<-c(0.851,0.967,1.212)
-d.values<-c(1.212,1.330,1.569)
-m<-m(vec)
-d<-d(vec)
-m.sig<-sum(m>=m.values)
-d.sig<-sum(d>=d.values)
-sigLevels<-c("0.10","0.05","0.01")
+test.results1<-benford.results(vec.random)
+test.results2<-benford.results(vec.random,want.m=FALSE)
 
 ### QUESTION 2: CRITICAL VALUES
 ### 
-### function: print.benford
+### function: print.benfords
 ###
-###
-###
-###
+### inputs: vec.results, a vector of election results
+### outputs: table.benfords, a table containing the name and value of each statistic, 
+###     the relevant number of asterisks, and a legend explaining the asterisks
 
+print.benfords=function(vec.results){
+  vec.distrib<-get.distrib(vec.results) # find distribution of digits
+  vec.freq<-get.freq(vec.distrib) # find proportional frequency of digits
 
-
-if (want.m==TRUE & want.d==TRUE){
+  m<-find.m(vec.freq) # calculate m-statistic
+  d<-find.d(vec.freq) # calculate d-statistic
   
-  return(print(paste("m = ",m(vec),"and is significant at the",sigLevels[m.sig],"level;",
-                     "d = ",d(vec),"and is significant at the",sigLevels[d.sig],"level;")))
+  m.values<-c(0.851,0.967,1.212) # vector of critical values for m
+  d.values<-c(1.212,1.330,1.569) # vector of critical values for d
   
+  # comparing m and d statistics to their critical values; assigning to m.sig and d.sig values of 
+  #   (0, 1, 2, or 3) for (not significant, signifant at α=.10, at α=.05, or α=.10), respectively
+  m.sig<-sum(m>=m.values)
+  d.sig<-sum(d>=d.values)
+  
+  # m.star and d.star: m and d values pasted to their appropriate number of stars
+  stars<-c("*","**","***")
+  m.star<-paste(m, stars[m.sig], sep="")
+  d.star<-paste(d, stars[d.sig], sep="")
+  
+  matrix.benfords<-array()
+  matrix.benfords[1,]<-c("m statistic","d statistic")
+  table.benfords[2,]<-c(m.star, d.star)
 }
-else if(want.m==TRUE){
-  return(m(vec))
-}
-else if(want.d==TRUE){
-  return(d(vec))
-}
+
+stars<-c("*","**","***")
+paste("hello",stars[0],sep="")
+
+table.benfords<-list("Statistics"=names, "Values"=values, explanation)
+
+names
+values
+explanation
+
+this<-array(dim=c(3,3))
+this[1,1:2]<-c("m statistic","d statistic")
+
+this[2,1:2]<-c(.89,1.30)
+
+explanation<-bind(c("* = significant at α=.10", "** = significant at α=.10", "*** = significant at α=.10"))
+?table
+table1<-rbind(names, values)
+
+                   table.benfords[2,(1:2)]<-c(paste(.9, rep("*", 0)), paste(.11, rep("*", 2)))
+
+paste(.11, rep("*",2))
+paste("*",,sep="")
+
+?rep
+?structure
+
+
+### function: benfords.csv
+###
+###
+###
+###
