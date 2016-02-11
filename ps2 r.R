@@ -32,10 +32,6 @@ get.distrib=function(vec.results){
   return(vec.distrib)
 }
 
-### PROBLEM: if the original vector does not have all digits (1:9) appearing as the first significant digit
-###     of some value, then the table created in the above function will not include all 9 digits, so the 
-###     outputted vector will not be of length 9. I can't figure out how to fix this.
-
 ### TEST get.distrib on vec.random
 
 test.distrib<-get.distrib(vec.random)
@@ -89,6 +85,9 @@ find.d=function(vec.freq){
 test.d<-find.d(test.freq)
 fraud.d<-find.d(fraud.freq)
 
+### NOTE: Even with a "fraudulent" vector (repeated 3,4,5) as the original input, neither d nor m reaches its 
+###     critical value at any level of significance.
+
 ### QUESTION 1: CALCULATING VIOLATIONS
 ###
 ### function: benford.results
@@ -102,16 +101,16 @@ fraud.d<-find.d(fraud.freq)
 benford.results=function(vec.results,want.m=TRUE,want.d=TRUE){
   vec.distrib<-get.distrib(vec.results) # find distribution of digits
   vec.freq<-get.freq(vec.distrib) # find proportional frequency of digits
-  list.benford<-list(NULL) 
+  list.benford<-list() 
   if (want.m){
     m<-find.m(vec.freq) # calculate m-statistic, if requested
-    list.benford[[1]]<-m # add m to list, as first element
+    list.benford$"m value"<-m # add m to list, as first element
   }
   if (want.d){
     d<-find.d(vec.freq) # calculate d-statistic, if requested
-    list.benford[[2]]<-d # add d to list, as second element
+    list.benford$"d value"<-d # add d to list, as second element
   }
-  list.benford[[3]]<-vec.distrib # add vector of digit distributions to list, as second element
+  list.benford$"digit distribution"<-vec.distrib # add vector of digit distributions to list, as third element
   return(list.benford)
 }
 
@@ -119,6 +118,7 @@ benford.results=function(vec.results,want.m=TRUE,want.d=TRUE){
 
 test.results1<-benford.results(vec.random)
 test.results2<-benford.results(vec.random,want.m=FALSE)
+test.results3<-benford.results(not.random)
 
 ### QUESTION 2: CRITICAL VALUES
 ### 
@@ -135,28 +135,28 @@ print.benfords=function(vec.results){
   m<-find.m(vec.freq) # calculate m-statistic
   d<-find.d(vec.freq) # calculate d-statistic
   
-  m.values<-c(0.851,0.967,1.212) # vector of critical values for m
-  d.values<-c(1.212,1.330,1.569) # vector of critical values for d
+  m.critical<-c(0.851,0.967,1.212) # vector of critical values for m
+  d.critical<-c(1.212,1.330,1.569) # vector of critical values for d
   
   # comparing m and d statistics to their critical values; assigning to m.sig and d.sig values of 
   #   (0, 1, 2, or 3) for (not significant, signifant at α=.10, at α=.05, or α=.10), respectively
-  m.sig<-sum(m>=m.values)
-  d.sig<-sum(d>=d.values)
+  m.sig<-sum(m>=m.critical)
+  d.sig<-sum(d>=d.critical)
   
   # m.star and d.star: m and d values pasted to their appropriate number of stars
   stars<-c("*","**","***")
   m.star<-paste(m, stars[m.sig], sep="")
   d.star<-paste(d, stars[d.sig], sep="")
   
-  # matrix of statistics, with names, values, and asterisks
-  matrix.benfords<-array(dim=c(2,2))
-  matrix.benfords[1,]<-c("Leemis's m","Cho-Gains' d")
-  matrix.benfords[2,]<-c(m.star, d.star)
+  # array of statistics, with names, values, and asterisks
+  array.benfords<-array(dim=c(2,2))
+  array.benfords[1,]<-c("Leemis's m","Cho-Gains' d")
+  array.benfords[2,]<-c(m.star, d.star)
   
-  # list combining matrix above with explanation of stars
+  # list combining array above with explanation of stars
   explanation<-cbind(c("* = significant at α=.10", "** = significant at α=.05", "*** = significant at α=.01"))
   list.critical<-list()
-  list.critical[[1]]<-matrix.benfords
+  list.critical[[1]]<-array.benfords
   list.critical[[2]]<-explanation
   
   return(list.critical)
@@ -175,7 +175,7 @@ print.benfords(not.random)
 
 
 benfords.csv=function(vec.results, directory=("/Users/iramalis/Desktop/4625/wd")){
-  list.critical<-print.benfords(vec.results)
+  list.critical<-print.benfords(vec.results) # generating list that is the output from above function
   clean.array<-array(dim=c(6,2)) # empty array
   clean.array[1:2,1:2]<-list.critical[[1]] # adding statistic names and values
   clean.array[4:6,1]<-list.critical[[2]] # adding explanation of asterisks
@@ -187,5 +187,5 @@ benfords.csv=function(vec.results, directory=("/Users/iramalis/Desktop/4625/wd")
 }
 
 ### TEST
-benfords.csv(vec.random)
+benfords.csv(vec.random, directory=("/Users/iramalis/Desktop"))
 benfords.csv(not.random)
